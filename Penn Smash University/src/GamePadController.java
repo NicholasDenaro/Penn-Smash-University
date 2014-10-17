@@ -120,29 +120,45 @@ public class GamePadController extends Controller implements XBoxControllerListe
 		{
 			key=-1;
 			
-			if(event.pollDataX()>=0.75)
+			if(event.pollDataX()>=0.1)
 			{
 				key=Main.RIGHT;
 				value=event.pollDataX();
+				for(ControllerListener listener:listeners())
+					listener.actionPerformed(new ControllerEvent(ControllerEvent.PRESSED,key,value));
+				for(ControllerListener listener:listeners())
+					listener.actionPerformed(new ControllerEvent(ControllerEvent.PRESSED,Main.LEFT,0));
 			}
-			else if(event.pollDataX()<-0.75)
+			else if(event.pollDataX()<-0.1)
 			{
 				key=Main.LEFT;
-				value=event.pollDataX();
+				value=Math.abs(event.pollDataX());
+				for(ControllerListener listener:listeners())
+					listener.actionPerformed(new ControllerEvent(ControllerEvent.PRESSED,key,value));
+				for(ControllerListener listener:listeners())
+					listener.actionPerformed(new ControllerEvent(ControllerEvent.PRESSED,Main.RIGHT,0));
 			}
-			else if(event.pollDataY()>=0.75)
+			if(event.pollDataY()>=0.1)
 			{
 				key=Main.DOWN;
 				value=event.pollDataY();
+				for(ControllerListener listener:listeners())
+					listener.actionPerformed(new ControllerEvent(ControllerEvent.PRESSED,key,value));
+				for(ControllerListener listener:listeners())
+					listener.actionPerformed(new ControllerEvent(ControllerEvent.PRESSED,Main.UP,0));
 			}
-			else if(event.pollDataY()<-0.75)
+			else if(event.pollDataY()<-0.1)
 			{
 				key=Main.UP;
-				value=event.pollDataY();
+				value=Math.abs(event.pollDataY());
+				for(ControllerListener listener:listeners())
+					listener.actionPerformed(new ControllerEvent(ControllerEvent.PRESSED,key,value));
+				for(ControllerListener listener:listeners())
+					listener.actionPerformed(new ControllerEvent(ControllerEvent.PRESSED,Main.DOWN,0));
 			}
 		}
 		
-		if(key>=0)
+		/*if(key>=0)
 		{
 			if(wait==key)
 				return;
@@ -205,7 +221,7 @@ public class GamePadController extends Controller implements XBoxControllerListe
 				listener.actionPerformed(new ControllerEvent(ControllerEvent.PRESSED,Main.LEFT,0));
 			for(ControllerListener listener:listeners())
 				listener.actionPerformed(new ControllerEvent(ControllerEvent.PRESSED,Main.RIGHT,0));
-		}
+		}*/
 	}
 	
 	private int wait;

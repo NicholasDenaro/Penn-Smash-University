@@ -7,6 +7,8 @@ import denaro.nick.core.Sprite;
 import denaro.nick.core.controller.ControllerEvent;
 import denaro.nick.core.controller.ControllerListener;
 import denaro.nick.core.entity.Entity;
+import denaro.nick.core.timer.Timer;
+import denaro.nick.core.view.GameView2D;
 
 
 public class Character extends Entity implements ControllerListener
@@ -20,32 +22,35 @@ public class Character extends Entity implements ControllerListener
 	@Override
 	public void tick()
 	{
-		
+		//gravity is real
 		moveDelta(0,1);
 		checkWallCollision();
 		
-		if(keys[Main.DOWN]!=0)
-		{
-			yVelocity+=0.1;
-			imageIndex(1);
-		}
-		else
+		
+		//Left Stick movement
+		double angle = calcLStickAngle();
+		
+		
+		angle = Math.toDegrees(angle);
+		angle = (angle + 360)%360;
+		
+		if(angle <= (270-35)&& angle>90)
 		{
 			imageIndex(0);
-			if(keys[Main.LEFT]!=0)
-			{
-				//moveDelta(keys[Main.LEFT],0);
-				xVelocity+=keys[Main.LEFT];
-			}
-			if(keys[Main.RIGHT]!=0)
-			{
-				//moveDelta(keys[Main.RIGHT],0);
-				xVelocity+=keys[Main.RIGHT];
-			}
+			run(-keys[Main.LEFT]);
 		}
-		
-		
-		
+		else if(angle >= (270+35) || angle<90)
+		{
+			imageIndex(0);
+			run(keys[Main.RIGHT]);
+		}
+		else//crouching
+		{
+			crouch();
+		}
+		//End Movement
+				
+				
 		if(xVelocity>0.5)
 		{
 			xVelocity-=0.5;
@@ -71,8 +76,10 @@ public class Character extends Entity implements ControllerListener
 		moveDelta(xVelocity,0);
 		checkWallCollision();
 		
+		//Jump
 		if(keys[Main.X]==1||keys[Main.Y]==1)
 		{
+			imageIndex(2);
 			//System.out.println("jump!!!");
 			if(checkWallCollisionDelta(0,1))
 			{
@@ -118,9 +125,92 @@ public class Character extends Entity implements ControllerListener
 				allowDoubleJump=true;
 			}
 		}
+		//end jump
+		
+		//move to top-respawn
+		GameEngine g = GameEngine.instance();
+		GameView2D v = (GameView2D)g.view();
+		int maxHeight = v.height();
+		int maxWidth = v.width();
+		double curHeight = y();
+		if(curHeight>maxHeight)
+		{
+			
+			/*Timer t = new Timer(1, false)
+			{
+
+				@Override
+				public void action() {
+					// TODO Auto-generated method stub
+					
+				}
+				
+			};
+			t.*/
+			move(maxWidth/2,0);
+		}
+			
+		
 		
 	}
 	
+	
+	/**
+	 * Calculates and returns the Angle of the Left stick
+	 * @return - the angle of the left stick 
+	 */
+	private double calcLStickAngle()
+	{
+		double hStick, vStick;
+		if(keys[Main.LEFT]!=0)
+			hStick = -keys[Main.LEFT]; 
+		else
+			hStick = keys[Main.RIGHT];
+		if(keys[Main.UP]!=0)
+			vStick = keys[Main.UP]; 
+		else
+			vStick = -keys[Main.DOWN];
+		
+		return Math.atan2(vStick, hStick);
+	}
+	
+	/**
+	 * Returns true if you are running
+	 * @return returns horizontal velocity != 0
+	 */
+	private boolean isRunning()
+	{
+		return(xVelocity != 0.0);
+	}
+	
+	/**
+	 * increases the horizontal velocity based on x
+	 * @param x - the amount to increase horizontal velocity
+	 */
+	private void run(double x)
+	{
+		xVelocity+=x;
+	}
+	
+	/**
+	 * Crouches and increases fall rate and slows sideways movement
+	 * Changes image index on sprite page to crouch image
+	 */
+	private void crouch()
+	{
+		//fall faster
+		yVelocity+=0.1;
+		
+		//if moving horizontally, slow down faster
+		if(xVelocity!=0)
+		{
+			if(xVelocity>0)
+				xVelocity-=.1;
+			else
+				xVelocity+=.1;
+		}
+		imageIndex(1);
+	}
 	private void checkWallCollision()
 	{
 		GameEngine engine=GameEngine.instance();
