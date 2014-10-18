@@ -72,83 +72,21 @@ public class Main
 		
 		new Sprite("Wall","Wall.png",480,16,new Point(0,0));
 		
-		new Sprite("VWall", "VWall.png",100 ,300 , new Point(0,0));
-		new Sprite("HWall", "HWall.png",300 ,100 , new Point(0,0));
 		
 		GameMap<Entity> gm=new GameMap<Entity>();
 		
-		Entity wall=new Entity(Sprite.sprite("Wall"),0,0)
+		Entity wall=new Entity(null,0,0)
 		{
-
+			public static final long serialVersionUID = -4057178112391429871L;
 			@Override
 			public void tick()
 			{
 			}
-			
-			/*@Override
-			public Image image()
-			{
-				BufferedImage img=new BufferedImage(this.mask().getBounds().width,this.mask().getBounds().height,BufferedImage.TYPE_INT_ARGB);
-				Graphics2D g=img.createGraphics();
-				g.setColor(new Color(0,230,230,50));
-				g.fill(this.mask());
-				
-				g.dispose();
-				
-				return(img);
-			}*/
 		};
 		gm.add(wall);
-		
-		Entity vwall=new Entity(Sprite.sprite("VWall"),0,0)
-		{
-
-			@Override
-			public void tick()
-			{
-			}
-			
-			/*@Override
-			public Image image()
-			{
-				BufferedImage img=new BufferedImage(this.mask().getBounds().width,this.mask().getBounds().height,BufferedImage.TYPE_INT_ARGB);
-				Graphics2D g=img.createGraphics();
-				g.setColor(new Color(0,230,230,50));
-				g.fill(this.mask());
 				
-				g.dispose();
-				
-				return(img);
-			}*/
-		};
-		gm.add(vwall);
-		
-		Entity hwall=new Entity(Sprite.sprite("HWall"),0,0)
-		{
-
-			@Override
-			public void tick()
-			{
-			}
-			
-			/*@Override
-			public Image image()
-			{
-				BufferedImage img=new BufferedImage(this.mask().getBounds().width,this.mask().getBounds().height,BufferedImage.TYPE_INT_ARGB);
-				Graphics2D g=img.createGraphics();
-				g.setColor(new Color(0,230,230,50));
-				g.fill(this.mask());
-				
-				g.dispose();
-				
-				return(img);
-			}*/
-		};
-		gm.add(hwall);
-		
 		Character player=new Character(Sprite.sprite("Player"),0,0);
-		
-		
+				
 		gm.add(player);
 		
 		File f=new File("Player.ent");
@@ -159,16 +97,6 @@ public class Main
 		f=new File("Wall.ent");
 		out=new ObjectOutputStream(new FileOutputStream(f));
 		Entity.writeToStream(out,wall);
-		out.close();
-		
-		f=new File("VWall.ent");
-		out=new ObjectOutputStream(new FileOutputStream(f));
-		Entity.writeToStream(out,vwall);
-		out.close();
-		
-		f=new File("HWall.ent");
-		out=new ObjectOutputStream(new FileOutputStream(f));
-		Entity.writeToStream(out,hwall);
 		out.close();
 	}
 	

@@ -7,6 +7,7 @@ import denaro.nick.core.Sprite;
 import denaro.nick.core.controller.ControllerEvent;
 import denaro.nick.core.controller.ControllerListener;
 import denaro.nick.core.entity.Entity;
+import denaro.nick.core.timer.TickingTimer;
 import denaro.nick.core.timer.Timer;
 import denaro.nick.core.view.GameView2D;
 
@@ -22,48 +23,151 @@ public class Character extends Entity implements ControllerListener
 	@Override
 	public void tick()
 	{
+		//GAME PHYSICS 
+		
 		//gravity is real
-		moveDelta(0,1);
+		gravity(.35);
+		//Make sure if you're not moving purposely, you're slowing down
+		normalizeHorizontalVelocity(.5);
+		//Make sure you're not going through the floor!
 		checkWallCollision();
 		
 		
-		//Left Stick movement
-		double angle = calcLStickAngle();
+		//PLAYER MOVEMENT
+		
+		//if character is allowed to move, check LStick
+		if(allowMove)
+		{
+			//Left Stick movement
+			double angle = calcLStickAngle(); 
+			
+			if(angle <= (270-35)&& angle>90)
+			{
+				imageIndex(0);
+				run(-keys[Main.LEFT]);
+			}
+			else if(angle >= (270+35) || angle<90)
+			{
+				imageIndex(0);
+				run(keys[Main.RIGHT]);
+			}
+			else//crouching
+			{
+				crouch();
+			}
+		}//end if(allowMove)
+		
+		//make sure our moving isn't too fast
+		checkMaxXVelocity();
+		
+		//once velocity is ok, move and check collision
+		moveDelta(xVelocity,0);
+		checkWallCollision();
+		
+		//set back button to taunt
+		if(keys[Main.BACK]> 0 && allowTaunt)
+		{
+			int startingImageIndex = 6;
+			int endingImageIndex = 10;
+			int numTicks = 30;
+			taunt(startingImageIndex, endingImageIndex, numTicks);
+		}
+			
 		
 		
-		angle = Math.toDegrees(angle);
-		angle = (angle + 360)%360;
+		//if x or y pressed, jump
+		if(keys[Main.X]==1||keys[Main.Y]==1)
+		{
+			jump();
+		}
+		//if x and y not pressed
+		else
+		{
+			jumpTimer=0;
+			allowDoubleJump=true;
+		}
+		//end jump
 		
-		if(angle <= (270-35)&& angle>90)
+		//if need to respawn - respawn
+		checkRespawn();
+			
+		
+	}//end tick
+
+	private void jump()
+	{
+		imageIndex(2);
+		//System.out.println("jump!!!");
+		if(checkWallCollisionDelta(0,1))
 		{
-			imageIndex(0);
-			run(-keys[Main.LEFT]);
-		}
-		else if(angle >= (270+35) || angle<90)
-		{
-			imageIndex(0);
-			run(keys[Main.RIGHT]);
-		}
-		else//crouching
-		{
-			crouch();
-		}
-		//End Movement
-				
-				
-		if(xVelocity>0.5)
-		{
-			xVelocity-=0.5;
-		}
-		else if(xVelocity<-0.5)
-		{
-			xVelocity+=0.5;
+			//System.out.println("on wall");
+			yVelocity=-6.5;
+			jumpTimer=MAX_JUMP_TIMER;
+			doubleJump=false;
+			allowDoubleJump=false;
 		}
 		else
 		{
-			xVelocity=0;
+			if(jumpTimer>0)
+			{
+				jumpTimer--;
+				yVelocity=-6.5;
+			}
+			else if(!doubleJump&&allowDoubleJump)
+			{
+				yVelocity=-8;
+				doubleJump=true;
+				//NO. No. no. no... This is done. No more printing double jump. It's over. 
+				//Stop it. Please just stop it. 
+				//System.out.println("double jump!");
+			}
 		}
+	}
+	
+	//TODO:turn this into a method that calls a 'slideshow' method
+	//     allow taunt to break e.g. when hit
+	/**
+	 * goes through a taunt, starting at the first imageindex through to the second
+	 * and updates image every numTicks
+	 * @param start - starting index of taunt in sprite
+	 * @param end - ending image of taunt in sprite
+	 * @param numTicks - the number of ticks between updating each image
+	 */
+	private void taunt(int start, int end, int numTicks)
+	{
+		allowTaunt = false;
+		allowMove = false;
 		
+		TickingTimer t = new TickingTimer(numTicks*(end-start+1),true)
+		{
+			int index = start;
+			int ticks = 0;
+			@Override
+			public void action() {
+				//last tick, reset image, allow taunt and move
+				if(ticks==numTicks*(end-start+1))
+				{
+					imageIndex(0);
+					allowTaunt = true;
+					allowMove = true;
+				}		
+				//every ticks ticks change imageindex
+				else if(ticks++%numTicks==0)
+				{
+					imageIndex(index++);
+				}
+				
+							
+			}			
+		};
+		GameEngine.instance().addTimer(t);
+	}
+	
+	/**
+	 * @return 
+	 */
+	private void checkMaxXVelocity()
+	{
 		if(xVelocity>MAX_X_VELOCITY)
 		{
 			xVelocity=MAX_X_VELOCITY;
@@ -72,45 +176,71 @@ public class Character extends Entity implements ControllerListener
 		{
 			xVelocity=-MAX_X_VELOCITY;
 		}
-		
-		moveDelta(xVelocity,0);
-		checkWallCollision();
-		
-		//Jump
-		if(keys[Main.X]==1||keys[Main.Y]==1)
+	}
+	
+	
+	/**
+	 * checks if character needs to respawn - if they do, respawns them
+	 * 
+	 */
+	private void checkRespawn()
+	{ 
+		//check of character has moved off of screen too far with an allowance of extra each way
+		GameEngine g = GameEngine.instance();
+		GameView2D v = (GameView2D)g.view();
+		int maxHeight = v.height();
+		int maxWidth = v.width();
+		int hAllowance = maxHeight/5;
+		int wAllowance = maxWidth/5;
+		double curHeight = y();
+		double curWidth = x();
+		if(curHeight>(maxHeight+hAllowance) || curHeight<(-hAllowance) 
+				|| curWidth>(maxWidth+wAllowance) || curWidth<(-wAllowance))
 		{
-			imageIndex(2);
-			//System.out.println("jump!!!");
-			if(checkWallCollisionDelta(0,1))
+			//set how long to wait to respawn
+			double respawnTime = .5;
+			
+			//set off timer to respawn when done
+			TickingTimer w = new TickingTimer((int)(respawnTime*60), false)
 			{
-				//System.out.println("on wall");
-				yVelocity=-6.5;
-				jumpTimer=MAX_JUMP_TIMER;
-				doubleJump=false;
-				allowDoubleJump=false;
-			}
-			else
-			{
-				if(jumpTimer>0)
-				{
-					jumpTimer--;
-					yVelocity=-6.5;
+				@Override
+				public void action() {
+					yVelocity=0;
+					move(maxWidth/2,maxHeight/5);
 				}
-				else if(!doubleJump&&allowDoubleJump)
-				{
-					yVelocity=-8;
-					doubleJump=true;
-					System.out.println("double jump!");
-				}
-			}
+				
+			};
+			GameEngine.instance().addTimer(w);
+		}
+	}
+	
+	/**
+	 * Reduces horizontal velocity by x unless it's less than x, then it becomes 0
+	 * @param x parameter to reduce velocity by
+	 */
+	private void normalizeHorizontalVelocity(double x)
+	{
+		if(xVelocity>x)
+		{
+			xVelocity-=x;
+		}
+		else if(xVelocity<-x)
+		{
+			xVelocity+=x;
 		}
 		else
 		{
-			jumpTimer=0;
-			allowDoubleJump=true;
+			xVelocity=0;
 		}
-		
-		yVelocity+=0.3;//gravity
+	}
+	
+	/**
+	 * Takes in a number, and moves delta down in the y direction by that number
+	 * @param y - int to move delta down by
+	 */
+	private void gravity(double y)
+	{
+		yVelocity+=y;//gravity
 		moveDelta(0,yVelocity);
 		if(checkWallCollisionDelta(0,0))
 		{
@@ -125,35 +255,7 @@ public class Character extends Entity implements ControllerListener
 				allowDoubleJump=true;
 			}
 		}
-		//end jump
-		
-		//move to top-respawn
-		GameEngine g = GameEngine.instance();
-		GameView2D v = (GameView2D)g.view();
-		int maxHeight = v.height();
-		int maxWidth = v.width();
-		double curHeight = y();
-		if(curHeight>maxHeight)
-		{
-			
-			/*Timer t = new Timer(1, false)
-			{
-
-				@Override
-				public void action() {
-					// TODO Auto-generated method stub
-					
-				}
-				
-			};
-			t.*/
-			move(maxWidth/2,0);
-		}
-			
-		
-		
 	}
-	
 	
 	/**
 	 * Calculates and returns the Angle of the Left stick
@@ -171,7 +273,11 @@ public class Character extends Entity implements ControllerListener
 		else
 			vStick = -keys[Main.DOWN];
 		
-		return Math.atan2(vStick, hStick);
+		double angle = Math.atan2(vStick, hStick);
+		angle = Math.toDegrees(angle);
+		angle = (angle + 360)%360;
+		
+		return angle;
 	}
 	
 	/**
@@ -211,6 +317,7 @@ public class Character extends Entity implements ControllerListener
 		}
 		imageIndex(1);
 	}
+	
 	private void checkWallCollision()
 	{
 		GameEngine engine=GameEngine.instance();
@@ -220,6 +327,7 @@ public class Character extends Entity implements ControllerListener
 		{
 			if(entity!=this)
 			{
+				//TODO: this is said issue? fix with interpolation?
 				if(this.collision(x(),y(),entity))
 				{
 					move(lastX(),lastY());
@@ -262,9 +370,12 @@ public class Character extends Entity implements ControllerListener
 	private int jumpTimer=MAX_JUMP_TIMER;
 	private boolean doubleJump;
 	private boolean allowDoubleJump;
+	private boolean allowTaunt = true;
+	private boolean allowMove = true;
 	
 	
 	private static final int MAX_JUMP_TIMER=10;
+	public static final long serialVersionUID = 3485620288954336434L;
 	
 	public static final double MAX_X_VELOCITY=6;
 }

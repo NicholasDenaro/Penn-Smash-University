@@ -120,7 +120,7 @@ public class GamePadController extends Controller implements XBoxControllerListe
 		{
 			key=-1;
 			
-			if(event.pollDataX()>=0.1)
+			if(event.pollDataX()>=0)
 			{
 				key=Main.RIGHT;
 				value=event.pollDataX();
@@ -129,7 +129,7 @@ public class GamePadController extends Controller implements XBoxControllerListe
 				for(ControllerListener listener:listeners())
 					listener.actionPerformed(new ControllerEvent(ControllerEvent.PRESSED,Main.LEFT,0));
 			}
-			else if(event.pollDataX()<-0.1)
+			else if(event.pollDataX()<-0)
 			{
 				key=Main.LEFT;
 				value=Math.abs(event.pollDataX());
@@ -138,7 +138,7 @@ public class GamePadController extends Controller implements XBoxControllerListe
 				for(ControllerListener listener:listeners())
 					listener.actionPerformed(new ControllerEvent(ControllerEvent.PRESSED,Main.RIGHT,0));
 			}
-			if(event.pollDataY()>=0.1)
+			if(event.pollDataY()>=0)
 			{
 				key=Main.DOWN;
 				value=event.pollDataY();
@@ -147,7 +147,7 @@ public class GamePadController extends Controller implements XBoxControllerListe
 				for(ControllerListener listener:listeners())
 					listener.actionPerformed(new ControllerEvent(ControllerEvent.PRESSED,Main.UP,0));
 			}
-			else if(event.pollDataY()<-0.1)
+			else if(event.pollDataY()<-0)
 			{
 				key=Main.UP;
 				value=Math.abs(event.pollDataY());
@@ -157,71 +157,6 @@ public class GamePadController extends Controller implements XBoxControllerListe
 					listener.actionPerformed(new ControllerEvent(ControllerEvent.PRESSED,Main.DOWN,0));
 			}
 		}
-		
-		/*if(key>=0)
-		{
-			if(wait==key)
-				return;
-			else
-			{
-				resetWait();
-			}
-			wait=key;
-			timer=new Timer();
-			timer.schedule(new TimerTask(){
-
-				@Override
-				public void run()
-				{
-					wait=-1;
-				}
-				
-			},waitTime);
-			if(waitTime>100)
-				waitTime-=50;
-			
-			if(key==Main.UP)
-			{
-				for(ControllerListener listener:listeners())
-					listener.actionPerformed(new ControllerEvent(ControllerEvent.PRESSED,key,value));
-				for(ControllerListener listener:listeners())
-					listener.actionPerformed(new ControllerEvent(ControllerEvent.PRESSED,Main.DOWN,0));
-			}
-			if(key==Main.DOWN)
-			{
-				for(ControllerListener listener:listeners())
-					listener.actionPerformed(new ControllerEvent(ControllerEvent.PRESSED,key,value));
-				for(ControllerListener listener:listeners())
-					listener.actionPerformed(new ControllerEvent(ControllerEvent.PRESSED,Main.UP,0));
-			}
-			if(key==Main.RIGHT)
-			{
-				for(ControllerListener listener:listeners())
-					listener.actionPerformed(new ControllerEvent(ControllerEvent.PRESSED,key,value));
-				for(ControllerListener listener:listeners())
-					listener.actionPerformed(new ControllerEvent(ControllerEvent.PRESSED,Main.LEFT,0));
-			}
-			if(key==Main.LEFT)
-			{
-				for(ControllerListener listener:listeners())
-					listener.actionPerformed(new ControllerEvent(ControllerEvent.PRESSED,key,value));
-				for(ControllerListener listener:listeners())
-					listener.actionPerformed(new ControllerEvent(ControllerEvent.PRESSED,Main.RIGHT,0));
-			}
-			
-		}
-		else if(key==-1)
-		{
-			resetWait();
-			for(ControllerListener listener:listeners())
-				listener.actionPerformed(new ControllerEvent(ControllerEvent.PRESSED,Main.UP,0));
-			for(ControllerListener listener:listeners())
-				listener.actionPerformed(new ControllerEvent(ControllerEvent.PRESSED,Main.DOWN,0));
-			for(ControllerListener listener:listeners())
-				listener.actionPerformed(new ControllerEvent(ControllerEvent.PRESSED,Main.LEFT,0));
-			for(ControllerListener listener:listeners())
-				listener.actionPerformed(new ControllerEvent(ControllerEvent.PRESSED,Main.RIGHT,0));
-		}*/
 	}
 	
 	private int wait;
