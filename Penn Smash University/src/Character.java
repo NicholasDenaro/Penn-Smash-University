@@ -28,9 +28,13 @@ public class Character extends Entity implements ControllerListener
 		//gravity is real
 		gravity(.35);
 		//Make sure if you're not moving purposely, you're slowing down
-		normalizeHorizontalVelocity(.5);
+		applyFriction(.5);
 		//Make sure you're not going through the floor!
 		checkWallCollision();
+		
+		
+		//PLAYER ATTACKING
+		checkForAttacks();
 		
 		
 		//PLAYER MOVEMENT
@@ -43,13 +47,19 @@ public class Character extends Entity implements ControllerListener
 			
 			if(angle <= (270-35)&& angle>90)
 			{
-				imageIndex(0);
-				run(-keys[Main.LEFT]);
+				imageIndex(3);
+				
+				if(keys[Main.LEFT]!=0)
+				{
+					//System.out.println("left: "+keys[Main.LEFT]);
+					run(-keys[Main.LEFT]);
+				}
 			}
 			else if(angle >= (270+35) || angle<90)
 			{
 				imageIndex(0);
-				run(keys[Main.RIGHT]);
+				if(keys[Main.RIGHT]!=0)
+					run(keys[Main.RIGHT]);
 			}
 			else//crouching
 			{
@@ -81,7 +91,7 @@ public class Character extends Entity implements ControllerListener
 			jump();
 		}
 		//if x and y not pressed
-		else
+		else if(keys[Main.X]==0&&keys[Main.Y]==0)
 		{
 			jumpTimer=0;
 			allowDoubleJump=true;
@@ -121,6 +131,23 @@ public class Character extends Entity implements ControllerListener
 				//Stop it. Please just stop it. 
 				//System.out.println("double jump!");
 			}
+		}
+	}
+	
+	private void checkForAttacks()
+	{
+		if(keys[Main.A]==1)
+		{
+			if(allowAttack)
+			{
+				if(attack!=null)
+					attack.execute(this);
+				allowAttack=false;
+			}
+		}
+		else
+		{
+			allowAttack=true;
 		}
 	}
 	
@@ -218,8 +245,11 @@ public class Character extends Entity implements ControllerListener
 	 * Reduces horizontal velocity by x unless it's less than x, then it becomes 0
 	 * @param x parameter to reduce velocity by
 	 */
-	private void normalizeHorizontalVelocity(double x)
+	private void applyFriction(double x)
 	{
+		if(xVelocity==0)
+			return;
+		double xVelLast=xVelocity;
 		if(xVelocity>x)
 		{
 			xVelocity-=x;
@@ -232,6 +262,12 @@ public class Character extends Entity implements ControllerListener
 		{
 			xVelocity=0;
 		}
+		
+		if(xVelLast>0&&xVelocity<0)
+			xVelocity=0;
+		
+		if(xVelLast<0&&xVelocity>0)
+			xVelocity=0;
 	}
 	
 	/**
@@ -244,16 +280,25 @@ public class Character extends Entity implements ControllerListener
 		moveDelta(0,yVelocity);
 		if(checkWallCollisionDelta(0,0))
 		{
+			double lasty=lastY();
 			move(lastX(),lastY());
 			yVelocity=0;
-			doubleJump=false;
+			
+			if(y()<lasty)
+				doubleJump=false;
 		}
 		else
 		{
 			if(keys[Main.X]==0&&keys[Main.Y]==0)
 			{
 				allowDoubleJump=true;
+				//System.out.println("no collision with wall, allow jump and doubleJump");
 			}
+		}
+		if(checkWallCollisionDelta(0,1))
+		{
+			//TODO Optimize this shit o_o
+			doubleJump=false;
 		}
 	}
 	
@@ -276,6 +321,11 @@ public class Character extends Entity implements ControllerListener
 		double angle = Math.atan2(vStick, hStick);
 		angle = Math.toDegrees(angle);
 		angle = (angle + 360)%360;
+		
+		if(angle>90&&angle<270)
+			hDirection=LEFT;
+		else
+			hDirection=RIGHT;
 		
 		return angle;
 	}
@@ -325,7 +375,7 @@ public class Character extends Entity implements ControllerListener
 		ArrayList<Entity> entities=loc.entityList();
 		for(Entity entity:entities)
 		{
-			if(entity!=this)
+			if(entity!=this && entity instanceof ParticleMask==false)
 			{
 				//TODO: this is said issue? fix with interpolation?
 				if(this.collision(x(),y(),entity))
@@ -343,7 +393,7 @@ public class Character extends Entity implements ControllerListener
 		ArrayList<Entity> entities=loc.entityList();
 		for(Entity entity:entities)
 		{
-			if(entity!=this)
+			if(entity!=this&& entity instanceof ParticleMask==false)
 			{
 				if(this.collision(x()+x,y()+y,entity))
 					return(true);
@@ -355,14 +405,28 @@ public class Character extends Entity implements ControllerListener
 	@Override
 	public void actionPerformed(ControllerEvent event)
 	{
+		if(event.code()>=Main.LASTKEYACTION||event.code()==-1)
+			return;
 		keys[event.code()]=event.modifier();
 		if(event.action()==event.MOVED)
 		{
 			if(Math.abs(event.modifier())<0.1)
 				keys[event.code()]=0;
 		}
-		
 	}
+	
+	public boolean hDirection()
+	{
+		return(hDirection);
+	}
+	
+	public void setVelocity(double direction, double vel)
+	{
+		xVelocity+=Math.cos(direction)*vel;
+		yVelocity-=Math.sin(direction)*vel;
+	}
+	
+	protected Attack attack;
 	
 	private double xVelocity=0;
 	private double yVelocity=0;
@@ -372,10 +436,16 @@ public class Character extends Entity implements ControllerListener
 	private boolean allowDoubleJump;
 	private boolean allowTaunt = true;
 	private boolean allowMove = true;
+	private int vDirection=1;//up=0;none=1;down=2;
+	private boolean allowAttack=true;
+	private boolean hDirection=LEFT;//left=false;right=true;
 	
 	
 	private static final int MAX_JUMP_TIMER=10;
 	public static final long serialVersionUID = 3485620288954336434L;
 	
 	public static final double MAX_X_VELOCITY=6;
+	
+	public static final boolean LEFT=false;
+	public static final boolean RIGHT=true;
 }

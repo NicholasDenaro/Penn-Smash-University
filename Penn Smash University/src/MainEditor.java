@@ -1,5 +1,6 @@
 import java.io.IOException;
 
+import denaro.nick.core.LocationAddEntityException;
 import denaro.nick.editor.Editor;
 
 
@@ -11,7 +12,7 @@ public class MainEditor
 		{
 			Main.createAssets();
 		}
-		catch(IOException | ClassNotFoundException e)
+		catch(IOException | ClassNotFoundException | LocationAddEntityException e)
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();

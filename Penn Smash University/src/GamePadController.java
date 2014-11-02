@@ -76,7 +76,7 @@ public class GamePadController extends Controller implements XBoxControllerListe
 				key=Main.LEFT;
 		}
 		for(ControllerListener listener:listeners())
-			listener.actionPerformed(new ControllerEvent(ControllerEvent.PRESSED,key));
+			listener.actionPerformed(new ControllerEvent(this,ControllerEvent.PRESSED,key));
 	}
 
 	@Override
@@ -97,7 +97,7 @@ public class GamePadController extends Controller implements XBoxControllerListe
 				key=Main.LEFT;
 		}
 		for(ControllerListener listener:listeners())
-			listener.actionPerformed(new ControllerEvent(ControllerEvent.RELEASED,key,0));
+			listener.actionPerformed(new ControllerEvent(this,ControllerEvent.RELEASED,key,0));
 	}
 	
 	public void resetWait()
@@ -120,41 +120,57 @@ public class GamePadController extends Controller implements XBoxControllerListe
 		{
 			key=-1;
 			
-			if(event.pollDataX()>=0)
+			if(event.pollDataX()>=0.2)
 			{
 				key=Main.RIGHT;
 				value=event.pollDataX();
 				for(ControllerListener listener:listeners())
-					listener.actionPerformed(new ControllerEvent(ControllerEvent.PRESSED,key,value));
+					listener.actionPerformed(new ControllerEvent(this,ControllerEvent.PRESSED,key,value));
 				for(ControllerListener listener:listeners())
-					listener.actionPerformed(new ControllerEvent(ControllerEvent.PRESSED,Main.LEFT,0));
+					listener.actionPerformed(new ControllerEvent(this,ControllerEvent.PRESSED,Main.LEFT,0));
 			}
-			else if(event.pollDataX()<-0)
+			else if(event.pollDataX()<-0.2)
 			{
 				key=Main.LEFT;
 				value=Math.abs(event.pollDataX());
 				for(ControllerListener listener:listeners())
-					listener.actionPerformed(new ControllerEvent(ControllerEvent.PRESSED,key,value));
+					listener.actionPerformed(new ControllerEvent(this,ControllerEvent.PRESSED,key,value));
 				for(ControllerListener listener:listeners())
-					listener.actionPerformed(new ControllerEvent(ControllerEvent.PRESSED,Main.RIGHT,0));
+					listener.actionPerformed(new ControllerEvent(this,ControllerEvent.PRESSED,Main.RIGHT,0));
 			}
-			if(event.pollDataY()>=0)
+			else
+			{
+				for(ControllerListener listener:listeners())
+					listener.actionPerformed(new ControllerEvent(this,ControllerEvent.PRESSED,Main.LEFT,0));
+				for(ControllerListener listener:listeners())
+					listener.actionPerformed(new ControllerEvent(this,ControllerEvent.PRESSED,Main.RIGHT,0));
+			}
+			
+			
+			if(event.pollDataY()>=0.2)
 			{
 				key=Main.DOWN;
 				value=event.pollDataY();
 				for(ControllerListener listener:listeners())
-					listener.actionPerformed(new ControllerEvent(ControllerEvent.PRESSED,key,value));
+					listener.actionPerformed(new ControllerEvent(this,ControllerEvent.PRESSED,key,value));
 				for(ControllerListener listener:listeners())
-					listener.actionPerformed(new ControllerEvent(ControllerEvent.PRESSED,Main.UP,0));
+					listener.actionPerformed(new ControllerEvent(this,ControllerEvent.PRESSED,Main.UP,0));
 			}
-			else if(event.pollDataY()<-0)
+			else if(event.pollDataY()<-0.2)
 			{
 				key=Main.UP;
 				value=Math.abs(event.pollDataY());
 				for(ControllerListener listener:listeners())
-					listener.actionPerformed(new ControllerEvent(ControllerEvent.PRESSED,key,value));
+					listener.actionPerformed(new ControllerEvent(this,ControllerEvent.PRESSED,key,value));
 				for(ControllerListener listener:listeners())
-					listener.actionPerformed(new ControllerEvent(ControllerEvent.PRESSED,Main.DOWN,0));
+					listener.actionPerformed(new ControllerEvent(this,ControllerEvent.PRESSED,Main.DOWN,0));
+			}
+			else
+			{
+				for(ControllerListener listener:listeners())
+					listener.actionPerformed(new ControllerEvent(this,ControllerEvent.PRESSED,Main.UP,0));
+				for(ControllerListener listener:listeners())
+					listener.actionPerformed(new ControllerEvent(this,ControllerEvent.PRESSED,Main.DOWN,0));
 			}
 		}
 	}
