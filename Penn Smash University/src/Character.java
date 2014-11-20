@@ -1,7 +1,9 @@
+import java.io.IOException;
 import java.util.ArrayList;
 
 import denaro.nick.core.Focusable;
 import denaro.nick.core.GameEngine;
+import denaro.nick.core.GameEngineException;
 import denaro.nick.core.Location;
 import denaro.nick.core.Sprite;
 import denaro.nick.core.controller.ControllerEvent;
@@ -44,31 +46,39 @@ public class Character extends Entity implements ControllerListener
 		{
 			//Left Stick movement
 			double angle = calcLStickAngle(); 
-			
-			if(angle <= (270-35)&& angle>90)
+			if(angle <= (270-35)&& angle>=90+35)
 			{
-				imageIndex(3);
-				
 				if(keys[Main.LEFT]!=0)
 				{
-					//System.out.println("left: "+keys[Main.LEFT]);
+					imageIndex(3);
+					hDirection=LEFT;
 					run(-keys[Main.LEFT]);
+					//make sure our moving isn't too fast
+					checkMaxXVelocity();
 				}
 			}
-			else if(angle >= (270+35) || angle<90)
+			else if(angle >= (270+35) || angle<=90-35)
 			{
-				imageIndex(0);
 				if(keys[Main.RIGHT]!=0)
+				{
+					imageIndex(0);
+					hDirection=RIGHT;
 					run(keys[Main.RIGHT]);
+					//make sure our moving isn't too fast
+					checkMaxXVelocity();
+				}
 			}
-			else//crouching
+			else if(angle>=90-35 &&angle<=90+35)//uppish
+			{
+				jump();
+			}
+			else//downish - 270-35<=angle<=270+35
 			{
 				crouch();
 			}
 		}//end if(allowMove)
 		
-		//make sure our moving isn't too fast
-		checkMaxXVelocity();
+		
 		
 		//once velocity is ok, move and check collision
 		moveDelta(xVelocity,0);
@@ -100,14 +110,28 @@ public class Character extends Entity implements ControllerListener
 		
 		//if need to respawn - respawn
 		checkRespawn();
+		
+		//check end
+		if(keys[Main.XBOXBUTTON]==1)
+		{
+			String[] args = { }; 
+			try {
+				Main.main(args);
+			} catch (ClassNotFoundException | IOException | GameEngineException e) {
+				e.printStackTrace();
+			}
+		}
 			
 		
 	}//end tick
 
 	private void jump()
 	{
-		imageIndex(2);
-		//System.out.println("jump!!!");
+		if(hDirection==RIGHT)
+			imageIndex(2);
+		else if(hDirection==LEFT)
+			imageIndex(5);
+		
 		if(checkWallCollisionDelta(0,1))
 		{
 			//System.out.println("on wall");
@@ -322,10 +346,12 @@ public class Character extends Entity implements ControllerListener
 		angle = Math.toDegrees(angle);
 		angle = (angle + 360)%360;
 		
-		if(angle>90&&angle<270)
+		
+		//THIS ISBAD AND IT SHOULD FEEL BAD
+		/*if(angle>90&&angle<270)
 			hDirection=LEFT;
 		else
-			hDirection=RIGHT;
+			hDirection=RIGHT;*/
 		
 		return angle;
 	}

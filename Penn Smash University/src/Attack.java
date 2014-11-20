@@ -48,9 +48,13 @@ public class Attack extends Identifiable
 			{
 				if(characters.get(i).collision(null,m.area()))
 				{
-					System.out.println("I'm hit!!!");
+					//System.out.println("I'm hit!!!");
 					Character ch=(Character)characters.get(i);
-					ch.setVelocity(attacker.direction(ch)+Math.PI/8,10);
+					//bandaid uppermovement
+					if(attacker.direction(ch)>3*Math.PI/2 || attacker.direction(ch)<Math.PI/2)
+						ch.setVelocity(attacker.direction(ch)+Math.PI/8,damage);
+					else
+						ch.setVelocity(attacker.direction(ch)-Math.PI/8,damage);
 				}
 			}
 		}

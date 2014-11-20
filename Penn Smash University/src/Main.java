@@ -2,7 +2,6 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
-import java.awt.Image;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.geom.Area;
@@ -17,15 +16,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.net.MalformedURLException;
 import java.net.Socket;
 import java.net.URL;
-import java.util.ArrayList;
 
 import javax.swing.JOptionPane;
 
-import denaro.nick.controllertest.XBoxController;
-import denaro.nick.core.FixedFPSType;
 import denaro.nick.core.FixedTickType;
 import denaro.nick.core.Focusable;
 import denaro.nick.core.GameEngine;
@@ -41,10 +36,13 @@ import denaro.nick.core.controller.ControllerListener;
 import denaro.nick.core.entity.Entity;
 import denaro.nick.core.entity.Mask;
 import denaro.nick.core.view.GameView2D;
-import denaro.nick.editor.Editor;
-import denaro.nick.server.Server;
 
-
+//TODO:
+//Fix imageindex(jumping and stuff)
+//angles for running/jumping/crouching
+//make attacks(sort by champion or soemthing) - dmg/life etc 
+//actual match/champ select etc
+//identifiers over character(P1, p2\, etc), health, etc
 public class Main
 {
 	public static void main(String[] args) throws ClassNotFoundException, FileNotFoundException, IOException, GameEngineException
@@ -58,7 +56,10 @@ public class Main
 			e.printStackTrace();
 		}
 		
-		GameEngine engine=GameEngine.instance(new FixedTickType(60),false);
+		try
+		{
+		GameEngine engine = GameEngine.instance(new FixedTickType(60),false);
+		
 		
 		GameView2D view=new GameView2D(800, 500, 1, 1);
 		engine.view(view);
@@ -74,19 +75,24 @@ public class Main
 		
 		
 		frame.setVisible(true);
+		view.requestFocus();
 		
 		engine.start();
+		}
+		catch(Exception e){};
 
 	}
-	
+	//this is bad - 2 keyboard controllers = synchronized movement on one keyboard
 	public static void setupEngine(GameEngine engine)
 	{
-		GamePadController controller=new GamePadController();
-		engine.controller(controller);
+		Controller controller = new GamePadController();
+		if(!engine.controller(controller))
+			engine.controller(new KeyboardController());
 		
 		
-		GamePadController controller2=new GamePadController();
-		engine.controller(controller2);
+		Controller controller2 = new GamePadController();
+		if(!engine.controller(controller2));
+			engine.controller(new KeyboardController());
 	}
 	
 	public static void createAssets() throws IOException, ClassNotFoundException, LocationAddEntityException
@@ -216,7 +222,7 @@ public class Main
 	
 	public static void createAttacks()
 	{
-		Attack attack=new Attack(0.5,1,1,new Mask(new Area(new Rectangle.Double(0,0,32,32))));
+		Attack attack = new Attack(30,1,1,new Mask(new Area(new Rectangle.Double(0,0,32,32))));
 		attacks.add(attack);
 	}
 	
@@ -325,5 +331,9 @@ public class Main
 	public static final int DOWN=9;
 	public static final int LEFT=10;
 	public static final int RIGHT=11;
-	public static final int LASTKEYACTION=12;
+
+	public static final int XBOXBUTTON=12;
+	
+	public static final int LASTKEYACTION=13;
+	
 }

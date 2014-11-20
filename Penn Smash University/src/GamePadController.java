@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import denaro.nick.controllertest.ControllerComponentConstants;
 import denaro.nick.controllertest.XBoxAnalogEvent;
 import denaro.nick.controllertest.XBoxController;
 import denaro.nick.controllertest.XBoxControllerListener;
@@ -32,16 +33,17 @@ public class GamePadController extends Controller implements XBoxControllerListe
 	protected void createDefaultKeymap()
 	{
 		defaultKeymap=new HashMap<Integer,Integer>();
-		defaultKeymap.put(XBoxController.DPAD,-1);
-		defaultKeymap.put(XBoxController.A,Main.A);
-		defaultKeymap.put(XBoxController.B,Main.B);
-		defaultKeymap.put(XBoxController.START,Main.START);
-		defaultKeymap.put(XBoxController.BACK,Main.BACK);
-		defaultKeymap.put(XBoxController.X,Main.X);
-		defaultKeymap.put(XBoxController.Y,Main.Y);
-		defaultKeymap.put(XBoxController.LEFTBUMPER,Main.LB);
-		defaultKeymap.put(XBoxController.RIGHTBUMPER,Main.RB);
-	}
+		defaultKeymap.put(ControllerComponentConstants.DPAD,-1);
+		defaultKeymap.put(ControllerComponentConstants.A,Main.A);
+		defaultKeymap.put(ControllerComponentConstants.B,Main.B);
+		defaultKeymap.put(ControllerComponentConstants.START,Main.START);
+		defaultKeymap.put(ControllerComponentConstants.BACK,Main.BACK);
+		defaultKeymap.put(ControllerComponentConstants.X,Main.X);
+		defaultKeymap.put(ControllerComponentConstants.Y,Main.Y);
+		defaultKeymap.put(ControllerComponentConstants.LEFTBUMPER,Main.LB);
+		defaultKeymap.put(ControllerComponentConstants.RIGHTBUMPER,Main.RB);
+		defaultKeymap.put(ControllerComponentConstants.XBOXBUTTON,Main.XBOXBUTTON);
+		}
 	
 	@Override
 	public boolean init(GameEngine engine)
@@ -62,17 +64,20 @@ public class GamePadController extends Controller implements XBoxControllerListe
 	public void buttonPressed(XBoxButtonEvent event)
 	{
 		if(!keymap().containsKey(event.getButtonCode()))
-			return;
-		int key=keymap().get(event.getButtonCode());
-		if(event.getButtonCode()==XBoxController.DPAD)
 		{
-			if(event.pollData()==XBoxController.DPAD_UP)
+			System.out.println("button not in map");
+			return;
+		}
+		int key=keymap().get(event.getButtonCode());
+		if(event.getButtonCode()==ControllerComponentConstants.DPAD)
+		{
+			if(event.pollData()==ControllerComponentConstants.DPAD_UP)
 				key=Main.UP;
-			else if(event.pollData()==XBoxController.DPAD_RIGHT)
+			else if(event.pollData()==ControllerComponentConstants.DPAD_RIGHT)
 				key=Main.RIGHT;
-			else if(event.pollData()==XBoxController.DPAD_DOWN)
+			else if(event.pollData()==ControllerComponentConstants.DPAD_DOWN)
 				key=Main.DOWN;
-			else if(event.pollData()==XBoxController.DPAD_LEFT)
+			else if(event.pollData()==ControllerComponentConstants.DPAD_LEFT)
 				key=Main.LEFT;
 		}
 		for(ControllerListener listener:listeners())
@@ -85,7 +90,7 @@ public class GamePadController extends Controller implements XBoxControllerListe
 		if(!keymap().containsKey(event.getButtonCode()))
 			return;
 		int key=keymap().get(event.getButtonCode());
-		if(event.getButtonCode()==XBoxController.DPAD)
+		if(event.getButtonCode()==ControllerComponentConstants.DPAD)
 		{
 			if(event.pollData()==0.25)
 				key=Main.UP;
@@ -116,7 +121,7 @@ public class GamePadController extends Controller implements XBoxControllerListe
 	{
 		int key=-2;
 		float value=0;
-		if(event.getButtonCode()==XBoxController.LEFTSTICK)
+		if(event.getButtonCode()==ControllerComponentConstants.LEFTSTICK)
 		{
 			key=-1;
 			
